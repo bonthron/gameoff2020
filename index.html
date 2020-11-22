@@ -77,111 +77,163 @@
 	  const viewPortSize = {w:650, h:350}
 	  
 	  let dash = buildDashboard(DEAD_CENTER, viewPortSize);
-	  
-	  let moon1 = new cjs.Container();
-	  moon1.x = DEAD_CENTER.x;
-	  moon1.y = DEAD_CENTER.y;	  	  
 
-	  let moon2 = new cjs.Container();
-	  moon2.x = DEAD_CENTER.x;
-	  moon2.y = DEAD_CENTER.y;	  
+	  var LOWER;
+	  var UPPER;
 
-	  var texture = new cjs.Bitmap(queue.getResult("texture"));
-	  texture.x = - 1816;
-	  texture.y = - 1816;
+	  var LOWER_SCALE = 0.25;
+	  var UPPER_SCALE = 0.25;
+	  
+	  let MASK = new cjs.Shape();
+	  MASK.graphics.f("#000000").dc(0,0,200);
+	  
+	  var moonQueue = [];
+	  var scaleQueue = [];
+	  var maskQueue = [];	  
+	  
+	  let firstMoon = makeMoon();
+	  moonQueue.push(firstMoon);
+	  stage.addChild(firstMoon);
+	  scaleQueue.push(0.25);
+	  maskQueue.push(MASK.clone(true));
+	  
+	  let secondMoon = makeMoon();
+	  moonQueue.push(secondMoon);
+	  stage.addChild(secondMoon);	  
+	  scaleQueue.push(0.25);	  
+	  maskQueue.push(MASK.clone(true))
 
-	  var texture2 = texture.clone();
-	  texture2.x = - 1816;
-	  texture2.y = - 1816;
-	  
-	  var shadow = new cjs.Bitmap(queue.getResult("shadow"));
-	  shadow.x = - 1816;
-	  shadow.y = - 1816;	  
-	  
-	  
-	  const MIN_SIZE = 400;
-	  
-	  let blackCircle = new cjs.Shape();
-	  blackCircle.graphics.s("#fff").f("#333").dc(0,0, MIN_SIZE)
-	  
-	  let mask = new cjs.Shape();
-	  mask.graphics
-	      .f("#000000")
-              .dc(0,0,100)
+	  let thirdMoon = makeMoon();
+	  moonQueue.push(thirdMoon);
+	  thirdMoon.visible = false;
+	  stage.addChild(thirdMoon);	  
+	  scaleQueue.push(0.25);	  
+	  maskQueue.push(MASK.clone(true))
 
-	  mask.x = moon2.x + 400;
-          mask.y = moon2.y;
-
-	  let trackdot = new cjs.Shape();
-	  trackdot.graphics.f("#ff0000").dc(0,0,6)
-	  trackdot.x = 200
 	  
-	  moon1.addChild(texture);
-	  moon1.addChild(shadow);	  	  
-	  moon1.addChild(trackdot);
+	  console.log(moonQueue, scaleQueue, maskQueue)
+
+	  //-------------------------------------------------------- makeMoon
+	  function makeMoon(){
+
+	      let c = new cjs.Container();
+	      c.x = DEAD_CENTER.x;
+	      c.y = DEAD_CENTER.y;
+
+	      let bit = new cjs.Bitmap(queue.getResult("moonJPG"));
+	      bit.x = bit.y = -1816;
+	      c.addChild(bit);
+	      
+	      let trackdot = new cjs.Shape();
+	      trackdot.graphics.f("#ff0000").dc(0,0,6)
+	      trackdot.x = 200
+	      c.trackdot = trackdot;
+	      c.addChild(trackdot);
+
+	      return c;
+	  }
+
 	  
-	  mask.scale = 0.1;
-	  
-	  moon2.addChild(texture2);
-	  moon2.addChild(blackCircle);	  
-	  moon2.mask = mask;
+	  //-------------------------------------------------------- runLevel
+	  function runLevel(){
 
-	  stage.addChild(moon1);
-	  stage.addChild(moon2);	  		   	  
-	  stage.addChild(dash);	  		   
+	      stage.removeChild(dash);
 
-//	  moon1.scale = 0.25;
+	      moonQueue.shift();
+	      scaleQueue.shift();
+	      maskQueue.shift();
+	      
+	      let m = makeMoon();
+	      m.visible = false;
+	      stage.addChild(m);
+	      
+	      moonQueue.push(m);
+	      scaleQueue.push(0.25)	      
+	      maskQueue.push(MASK.clone(true))
 
-	  let SSS = 0.25
-	  
-	  cjs.Tween.get({scale:0.2}).wait(500).to({scale:1.5}, (20 * 1000)).addEventListener("change", (evt) => {
-	      let s = evt.target.target.scale;
-	      SSS = s;
+	      moonQueue[1].visible = true;
+	      
+	      moonQueue[0].mask = null;
+	      moonQueue[1].mask = maskQueue[1];
+	      moonQueue[2].mask = null;
 
-	      mask.scale = s;
-	  });
+	      stage.addChild(dash);
+	      
+	      var t = cjs.Tween.get({N:0.25}).to({N:1.5}, (8 * 1000)).call(() => {
+		  let t2 = cjs.Tween.get(MASK).to({scale:6}, (1 * 1000)).call(() => {
+//		      moonQueue[1].mask = null;
+//		      stage.removeChild(moonQueue[0]);
+//		      moonQueue.shift();
+//		      scaleQueue.shift();
+		      runLevel();
+		  })
+	      })
 
-	  cjs.Tween.get(moon1).wait(500).to({rotation:90}, (20 * 1000))
-	  cjs.Tween.get(blackCircle).wait(500).to({alpha:0}, (20 * 1000))
-	  
+	      t.addEventListener("change", (evt) => {
+		  
+		  let s = evt.target.target.N;
+		  scaleQueue[0] = s;
+		  maskQueue[1].scale = s;		  
+	      })
+	      
+	  }
+
+//	  cjs.Tween.get(moon1).wait(500).to({rotation:90}, (20 * 1000))
+
 
           cjs.Ticker.addEventListener('tick', function(){
 
+	      if(moonQueue.length < 2){ return; };
+	      
 	      if(keys.arrowdown) { trackpoint.y-=2 };
 	      if(keys.arrowup)   { trackpoint.y+=2 };
 	      if(keys.arrowleft) { trackpoint.x+=2 };
 	      if(keys.arrowright){ trackpoint.x-=2 };
 
-	      let MAX_W = ((moon1.scale * 3632)/2) - (viewPortSize.w/2);
-	      let MAX_H = ((moon1.scale * 3632)/2) - (viewPortSize.h/2);
+//	      let MAX_W = ((moon1.scale * 3632)/2) - (viewPortSize.w/2);
+//	      let MAX_H = ((moon1.scale * 3632)/2) - (viewPortSize.h/2);
 	      
-	      if(trackpoint.x > DEAD_CENTER.x + MAX_W){ trackpoint.x = DEAD_CENTER.x + MAX_W; };
-	      if(trackpoint.x < DEAD_CENTER.x - MAX_W){ trackpoint.x = DEAD_CENTER.x - MAX_W; };
-	      if(trackpoint.y > DEAD_CENTER.y + MAX_H){ trackpoint.y = DEAD_CENTER.y + MAX_H; };
-	      if(trackpoint.y < DEAD_CENTER.y - MAX_H){ trackpoint.y = DEAD_CENTER.y - MAX_H; };
+	//      if(trackpoint.x > DEAD_CENTER.x + MAX_W){ trackpoint.x = DEAD_CENTER.x + MAX_W; };
+//	      if(trackpoint.x < DEAD_CENTER.x - MAX_W){ trackpoint.x = DEAD_CENTER.x - MAX_W; };
+//	      if(trackpoint.y > DEAD_CENTER.y + MAX_H){ trackpoint.y = DEAD_CENTER.y + MAX_H; };
+//	      if(trackpoint.y < DEAD_CENTER.y - MAX_H){ trackpoint.y = DEAD_CENTER.y - MAX_H; };
 
-	      moon1.scale = SSS;
-	      moon1.x = trackpoint.x;
-	      moon1.y = trackpoint.y;
-	      
-	      let pt = moon1.localToGlobal(trackdot.x, trackdot.y);
-	      mask.x = pt.x;
-	      mask.y = pt.y;
+
+	      moonQueue[0].scale = scaleQueue[0];
+	      moonQueue[1].scale = scaleQueue[1];
+	      moonQueue[2].scale = scaleQueue[2];	      	      
+
+	      moonQueue[0].x = trackpoint.x;
+	      moonQueue[0].y = trackpoint.y;	      
+
+	      let transPt = moonQueue[0].localToGlobal(moonQueue[0].trackdot.x, moonQueue[0].trackdot.y);
+	      maskQueue[1].x = transPt.x;
+	      maskQueue[1].y = transPt.y;
 	  });	  
 	  
+
+	  runLevel();
       }
 	  
 
 	  // function distance(pt1, pt2) {  
 	  // return Math.sqrt(Math.pow((pt1.x - pt2.x), 2) + Math.pow((pt1.y - pt2.y), 2));
 	  // };
+	  
+//	  var shadow = new cjs.Bitmap(queue.getResult("shadow"));
+//	  shadow.x = - 1816;
+//	  shadow.y = - 1816;	  
+//	  moon1.addChild(shadow);	  	  	  
+//	  const MIN_SIZE = 400;
+//	  let blackCircle = new cjs.Shape();
+//	  blackCircle.graphics.s("#fff").f("#333").dc(0,0, MIN_SIZE)
 
 
     var queue = new createjs.LoadQueue(true);
     queue.on("complete", function(){ init(); });    
     queue.on("error", function(e){ console.log(e); });    
     queue.loadManifest([
-        {id:"texture", src:"moonOpt.jpg"},
+        {id:"moonJPG", src:"moonOpt.jpg"},
         {id:"shadow", src:"shadow.png"}	
     ]);
       
