@@ -30,18 +30,20 @@
 		  (0 - (viewPortSize.h/2)),
 		  viewPortSize.w,
 		  viewPortSize.h)
+
 	  viewportFrame.x = DEAD_CENTER.x;
 	  viewportFrame.y = DEAD_CENTER.y;	  
-	  viewportFrame.alpha = 0.3;
+	  viewportFrame.alpha = 0.4;
 	  
 	  let sighting = new cjs.Shape();
 	  sighting.graphics
-	      .s("#ffff")
+	      .s("#ffffff")
 	      .dc(0,0,60)
 	  sighting.x = DEAD_CENTER.x;
-	  sighting.y = DEAD_CENTER.y;
+	  sighting.y = DEAD_CENTER.y
+	  sighting.alpha = 0.6;
 
-	  dash.addChild(viewportFrame)
+	  dash.addChild(viewportFrame)	  
 	  dash.addChild(sighting)	  
 
 	  return dash;
@@ -193,18 +195,20 @@
 	      let scaleAmt = ((currentMoon.moonScale / 2) / 120)
 	      
 	      if(currentMoon.moonScale > 1){
-		  nextMoon.moonScale += 0.001;
 		  nextMoon.shade.alpha -= 0.001;
-
-		  if(nextMoon.rotationDir == 1){
-		      nextMoon.rotation += 0.1;
-		  }else{
-		      nextMoon.rotation -= 0.1;
-		  };
-		  
-		  currentMoon.shade.alpha += 0.001;
+		  currentMoon.shade.alpha += 0.002;
 	      }
 
+	      if(nextMoon.rotationDir == 1){
+		  nextMoon.rotation += 0.1;
+	      }else{
+		  nextMoon.rotation -= 0.1;
+	      };
+	      
+	      if(currentMoon.moonScale > 2.5){
+		  nextMoon.moonScale += 0.001;
+	      }
+	      
 	      if(currentMoon.moonScale < 3){
 		  currentMoon.moonScale += scaleAmt;
 		  nextMoon.maskScale += scaleAmt;
@@ -252,8 +256,9 @@
           font-size:16px;
           color:#222;
           text-align:center;
+	  background-color:#000;
       }
-      canvas { border:1px solid #000; display:block; margin:0px auto;}
+      canvas { display:block; margin:0px auto;}
     </style>
 
   </head>
@@ -262,9 +267,11 @@
     
 
     <!-- <canvas id="canvas1" width="650" height="350"></canvas> -->
+    <!-- <canvas id="canvas1" width="1200" height="800"></canvas> -->
     <a href="javascript:stop()" style="color:#ccc;">stop</a><br />
 
-    <canvas id="canvas1" width="1200" height="800"></canvas>
+    <canvas id="canvas1" width="1100" height="500" style="background-color:#000; width:100%;"></canvas>
+
 
 
   </body>
