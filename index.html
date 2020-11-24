@@ -12,6 +12,10 @@
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
     <script type="text/javascript">
 
+      function stop(){
+          cjs.Ticker.removeAllEventListeners();
+      }
+      
       const cjs = createjs;
 
       //--------------------------------------------------------------------------- buildDashboard
@@ -78,17 +82,13 @@
 	  
 	  let dash = buildDashboard(DEAD_CENTER, viewPortSize);
 
-	  var LOWER;
-	  var UPPER;
-
-	  var LOWER_SCALE = 0.25;
-	  var UPPER_SCALE = 0.25;
 	  
 	  let MASK = new cjs.Shape();
 	  MASK.graphics.f("#000000").dc(0,0,100);
 	  
 	  let moonCount = 0;
 
+	  
 	  //-------------------------------------------------------- makeMoon
 	  function makeMoon(){
 
@@ -99,11 +99,16 @@
 	      let bit = new cjs.Bitmap(queue.getResult("moonJPG"));
 	      bit.x = bit.y = -1816;
 	      c.addChild(bit);
+
+	      let shade = new cjs.Shape();
+	      shade.graphics.f("#000000").dc(0,0,2000)
+	      shade.alpha = 0.2;
+	      c.shade = shade;
+	      c.addChild(shade);
 	      
 	      let trackdot = new cjs.Shape();
-	      trackdot.graphics.f("#ff0000").dc(0,0,8)
+	      trackdot.graphics.f("#ccc").dc(0,0,1)
 	      trackdot.x = 200;
-//	      trackdot.alpha = 0.2;
 	      c.trackdot = trackdot;
 	      c.addChild(trackdot);
 
@@ -111,112 +116,111 @@
 	      
 	      c.name = moonCount;
 	      moonCount++;
-	      
-	      c.moonScale = 0.25;
-	      c.maskScale = 0.25;
 	      c.visible = false;
 
-	      c.rotation = Math.floor(Math.random() * 358) + 1  
+	      c.moonScale = 0.25;
+	      c.maskScale = 0.25;	      
+	      
+	      c.rotation = Math.floor(Math.random() * 358) + 1
+	      c.rotationDir = (Math.random() > .4) ? 1 : 0;
+
+	      
 	      return c;
 	  }
 
 	  let INDEX = 0;
 	  let ARR = []
+
+	  // currentMoon
 	  ARR.push(makeMoon())
-	  ARR.push(makeMoon())	  
 	  ARR[0].visible = true;
 	  ARR[0].mask = null;
-	  ARR[1].visible = true;
+	  ARR[0].shade.visible = false;
+	  
 	  stage.addChild(ARR[0])
-	  stage.addChild(ARR[1])	  
+
+	  // nextMoon
+	  ARR.push(makeMoon())
+	  ARR[1].visible = true;
+	  stage.addChild(ARR[1])
+	  
+	  stage.addChild(dash);
 
 
-	  //-------------------------------------------------------- runLevel
-	  function runLevel(){
-	      
-	      //test
-	      if(INDEX > 0){
-		  cjs.Tween.get(ARR[INDEX]).to({maskScale:20}, 1000)
-		  ARR[INDEX+1].visible = true;
-		  trackpoint.x = DEAD_CENTER.x;
-		  trackpoint.y = DEAD_CENTER.y;		  
-	      };
-
-	      for(var i = 0; i < INDEX; i++){
-		  if(i < INDEX + 2){
-		      stage.removeChild(ARR[i])
-		  }
-	      };
+	  //-------------------------------------------------------- nextLevel
+	  function nextLevel(current, next){
 
 	      stage.removeChild(dash);
+	      
+	      cjs.Tween.get(next.mask).to({scale:20}, 1000).call(()=>{
+		  stage.removeChild(current);
+		  next.mask = null;
+	      })
 
 	      let m = makeMoon();
+	      m.visible = true;
+	      stage.addChild(m);
+	      stage.addChild(dash);	      
+
 	      ARR.push(m);
-	      stage.addChild(m)
-	      stage.addChild(dash);
-
 	      INDEX++
-
-	      let rotation = (Math.floor(Math.random() * 358) + 1);
-	      
-	      cjs.Tween.get(ARR[INDEX - 1]).to({moonScale:2}, (8 * 1000))
-	      cjs.Tween.get(ARR[INDEX]).to({maskScale:3}, (8 * 1000))
-
-//	      cjs.Tween.get(ARR[INDEX - 1]).to({rotation: rotation }, (10 * 1000))
-	      cjs.Tween.get({}).wait(7 * 1000).call(() => { runLevel();  })	      
 	  }
 
 
+	  //-------------------------------------------------------- Ticker
           cjs.Ticker.addEventListener('tick', function(){
 	      
-	      if(keys.arrowdown) { trackpoint.y-=2 };
-	      if(keys.arrowup)   { trackpoint.y+=2 };
-	      if(keys.arrowleft) { trackpoint.x+=2 };
-	      if(keys.arrowright){ trackpoint.x-=2 };
-
-//	      let MAX_W = ((moon1.scale * 3632)/2) - (viewPortSize.w/2);
-//	      let MAX_H = ((moon1.scale * 3632)/2) - (viewPortSize.h/2);
-//            if(trackpoint.x > DEAD_CENTER.x + MAX_W){ trackpoint.x = DEAD_CENTER.x + MAX_W; };
-//	      if(trackpoint.x < DEAD_CENTER.x - MAX_W){ trackpoint.x = DEAD_CENTER.x - MAX_W; };
-//	      if(trackpoint.y > DEAD_CENTER.y + MAX_H){ trackpoint.y = DEAD_CENTER.y + MAX_H; };
-//	      if(trackpoint.y < DEAD_CENTER.y - MAX_H){ trackpoint.y = DEAD_CENTER.y - MAX_H; };
-
-	      ARR[INDEX - 1].x = trackpoint.x;
-	      ARR[INDEX - 1].y = trackpoint.y;	      
-
-	      ARR[INDEX - 1].scale = ARR[INDEX - 1].moonScale;
-	      ARR[INDEX].scale = ARR[INDEX].moonScale;
 	      
-	      ARR.forEach((m) => {
-//		  m.scale = m.moonScale;
-		  if(m.mask){
-		      m.mask.scale = m.maskScale;
+	      let currentMoon = ARR[INDEX];
+	      let nextMoon = ARR[INDEX + 1];
+
+	      
+	      if(keys.arrowdown) { currentMoon.y-= 2 };
+	      if(keys.arrowup)   { currentMoon.y+= 2 };
+	      if(keys.arrowleft) { currentMoon.x+= 2 };
+	      if(keys.arrowright){ currentMoon.x-= 2 };
+
+	      
+	      let scaleAmt = ((currentMoon.moonScale / 6) / 50)
+	      
+	      if(currentMoon.moonScale > 1){
+		  nextMoon.moonScale += 0.001;
+		  nextMoon.shade.alpha -= 0.001;
+
+		  if(nextMoon.rotationDir == 1){
+		      nextMoon.rotation += 0.1;
+		  }else{
+		      nextMoon.rotation -= 0.1;
 		  };
-	      })
-
-	      let transPt = ARR[INDEX - 1].localToGlobal(ARR[INDEX - 1].trackdot.x, ARR[INDEX - 1].trackdot.y);
-	      ARR[INDEX].mask.x = transPt.x;
-	      ARR[INDEX].mask.y = transPt.y;
+	      }
 	      
-	  });	  
-	  
+	      if(currentMoon.moonScale < 3){
+		  currentMoon.moonScale += scaleAmt;
+		  nextMoon.maskScale += scaleAmt;
+	      }
 
-	  runLevel();
+	      if(currentMoon.rotationDir == 1){
+		  currentMoon.rotation += 0.1;
+	      }else{
+		  currentMoon.rotation -= 0.1;
+	      };
+	      
+	      let transPt = currentMoon.localToGlobal(currentMoon.trackdot.x, currentMoon.trackdot.y);
+	      nextMoon.mask.x = transPt.x;
+	      nextMoon.mask.y = transPt.y;
+
+	      currentMoon.scale = currentMoon.moonScale;
+	      nextMoon.scale = nextMoon.moonScale;	      
+	      nextMoon.mask.scale = nextMoon.maskScale;
+
+	      if(currentMoon.moonScale > 3) {
+		  nextLevel(currentMoon, nextMoon);
+	      }	      
+
+	  });	  
+
       }
 	  
-
-	  // function distance(pt1, pt2) {  
-	  // return Math.sqrt(Math.pow((pt1.x - pt2.x), 2) + Math.pow((pt1.y - pt2.y), 2));
-	  // };
-	  
-//	  var shadow = new cjs.Bitmap(queue.getResult("shadow"));
-//	  shadow.x = - 1816;
-//	  shadow.y = - 1816;	  
-//	  moon1.addChild(shadow);	  	  	  
-//	  const MIN_SIZE = 400;
-//	  let blackCircle = new cjs.Shape();
-//	  blackCircle.graphics.s("#fff").f("#333").dc(0,0, MIN_SIZE)
-
 
     var queue = new createjs.LoadQueue(true);
     queue.on("complete", function(){ init(); });    
@@ -244,8 +248,10 @@
     
     <!-- <canvas id="canvas1" width="1200" height="800"></canvas> -->
     <!-- <canvas id="canvas1" width="650" height="350"></canvas> -->
+    <a href="javascript:stop()" style="color:#ccc;">stop</a><br />
 
     <canvas id="canvas1" width="1200" height="800"></canvas>
-    
+
+
   </body>
 </html>

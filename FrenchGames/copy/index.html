@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Pragma" content="no-cache, no-store" />
+        <meta http-equiv="Expires" content="31 Dec 1997" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bacon.js/3.0.13/Bacon.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.min.js"></script>
+        <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+        <script type="text/javascript">
+
+         var cjs = createjs;
+         
+         //--------------------------------------------------------------------------- init
+         function init(){
+             
+             cjs.Ticker.framerate = 60;
+             cjs.Ticker.timingMode = cjs.Ticker.RAF;
+             
+             let DOT_SPACING = 50;
+             let DOT_SIZE = 12;             
+             let matrix_size = 5;
+
+             let START_BUTTON = document.getElementById("startButton");
+             let TIMER_ELM = document.getElementById("timer");
+             let TITLE_ELM = document.getElementById("title");             
+             
+             START_BUTTON.addEventListener("click", startGame);
+             
+             let stage = new cjs.Stage("canvas1");
+             cjs.Ticker.addEventListener('tick', stage);
+             stage.x = stage.y = 0.5;
+
+             let dotColors = ["#dc0096", "#ef06a4", "#ef06a4", "#ff0ab1", "#ff0ab1", "#ff0ab1", "#ef06a4", "#ef06a4", "#dc0096"];
+
+             let patterns = [
+                 ["2,3","4,2","2,0","0,4","3,4"],
+                 ["3,2","0,2","0,1","1,1","1,0"],
+                 ["1,3","0,2","1,0","2,1","2,4","3,4"],
+                 ["2,4","4,2","4,0","2,2","0,0"]                 
+             ];
+             
+             let dotLayer = new cjs.Container();
+             let lineLayer = new cjs.Container();                          
+             
+             let patternDotLayer = new cjs.Container();
+             let patternLineLayer = new cjs.Container();             
+             
+             dotLayer.x = lineLayer.x = 400;
+             dotLayer.y = lineLayer.y = patternDotLayer.y = patternLineLayer.y = 50;
+
+             patternDotLayer.x = patternLineLayer.x = 50;
+
+             dotLayer.alpha = 0;
+             lineLayer.alpha = 0;
+             
+             patternDotLayer.alpha = 0;
+             patternLineLayer.alpha = 0;
+             
+             stage.addChild(dotLayer);
+             stage.addChild(lineLayer);             
+
+             stage.addChild(patternLineLayer);             
+             stage.addChild(patternDotLayer);
+
+             
+             //--------------------------------------------------------------------------- down / hit
+             let down = new Bacon.Bus();
+             
+             stage.enableMouseOver();
+             stage.addEventListener("stagemousedown", stageDown);
+             
+             function stageDown(e){
+                 var x = e.stageX - dotLayer.x;
+                 var y = e.stageY - dotLayer.y;
+                 down.push({x:x,y:y})
+             };
+
+             let hit = down.flatMap((click) => {
+                 let hit = R.find((o) => { return distance({x:o.pixelX, y:o.pixelY}, click) <= DOT_SIZE; }, recArr);                     return hit ? hit : Bacon.never();
+             })
+
+             
+             //--------------------------------------------------------------------------- records array
+             let recArr = [];
+             
+             for(let i=0; i < matrix_size; i++){
+                 let y = (i * DOT_SPACING);
+                 for(let j=0; j < matrix_size; j++){
+                     let x = (j * DOT_SPACING);
+
+                     let rec = {
+                         name: String(j) + "," + String(i),
+                         coorX: j,
+                         coorY: i,
+                         pixelX:x,
+                         pixelY:y,
+                         color:dotColors[i + j]
+                     }
+
+                     recArr.push(rec);
+                 };
+             };
+
+
+             //--------------------------------------------------------------------------- makeDot
+             function makeDot(color){
+                 return new createjs.Graphics().f(color).drawCircle(0, 0, DOT_SIZE).ef();
+             }
+
+
+             //--------------------------------------------------------------------------- dotShapeArr
+             let dotShapeArr = R.map((o) => {
+
+                 let s = new cjs.Shape();
+                 s.graphics = makeDot(o.color);
+                 s.name = o.name;
+                 s.x = o.pixelX;
+                 s.y = o.pixelY;
+                 s.coorX = o.coorX;
+                 s.coorY = o.coorY;
+                 
+                 dotLayer.addChild(s);
+
+                 return s;
+             }, recArr);
+
+             
+             //--------------------------------------------------------------------------- patternDotShapeArr
+             let patternDotShapeArr = R.map((o) => {
+
+                 let s = getDotShapeObj(o);
+                 let p = s.clone(true);  // clone!
+                 p.graphics = makeDot("#222");
+                 p.visible = false;
+                 patternDotLayer.addChild(p);
+                 return p;
+                 
+             }, dotShapeArr);
+             
+             
+             //--------------------------------------------------------------------------- makeLine
+             function makeLine(pair){
+
+                 let [pt1, pt2] = pair;
+                 let s = new cjs.Shape();
+                 s.graphics
+                  .ss(4, "round")
+                  .beginStroke("#222")                 
+                  .moveTo(pt1.pixelX, pt1.pixelY)
+                  .lineTo(pt2.pixelX, pt2.pixelY)
+                  .es()
+
+                 return s;
+             }
+
+             
+             //--------------------------------------------------------------------------- getDotShapeObj
+             function getDotShapeObj(o){
+
+                 return R.find((s) => { return s.name == o.name; }, dotShapeArr)
+             }
+
+             
+             //--------------------------------------------------------------------------- showPattern
+             function showPattern(patArr){
+                 
+                 patternLineLayer.removeAllChildren();
+
+                 R.forEach((d) => { return d.visible = false; }, patternDotShapeArr);
+
+                 
+                 let copiedRecs = R.map((name) => {
+                     return R.find((r) => { return r.name == name}, recArr);
+                 }, patArr);
+                 
+                 let pairs = R.aperture(2, copiedRecs);
+                 R.forEach((p) => { patternLineLayer.addChild(makeLine(p)); }, pairs);
+
+                 let first = R.find((s) => { return s.name == patArr[0]; }, patternDotShapeArr);
+                 first.visible = true;
+             }
+
+
+             let newRoundBus = new Bacon.Bus();
+
+             
+             //--------------------------------------------------------------------------- timer
+             let timer = newRoundBus
+                 .flatMap((e) => {
+                     return Bacon.sequentially(1000, [7,6,5,4,3,2,1,0]);
+                 })
+
+             timer
+                 .onValue((v) => {
+                     if(v == 0){
+                         TIMER_ELM.innerHTML = "&nbsp;";
+
+                         endRound()
+                         
+                     }else{
+                         TIMER_ELM.innerHTML = v;
+                     };
+                 })
+
+
+             
+             //--------------------------------------------------------------------------- hitAccumulator
+             let hitAccumulator = hit
+                 .merge(newRoundBus)
+                 .scan([], (acc, e) => {
+                     if(e.pattern){
+                         let firstDot = R.find((r) => { return r.name == e.pattern[0]; }, recArr);
+                         return [firstDot];
+                     }else{
+                         
+                         var hit = e;
+                         let i = R.findIndex(R.propEq('name', hit.name), acc);
+                         
+                         if(i == -1){
+                             return R.append(hit, acc);
+                         }else{
+                             return R.slice(0, i + 1, acc);
+                         };
+                     };
+                 })
+
+             
+             //--------------------------------------------------------------------------- changeDots
+             let changeDots = hitAccumulator
+                 .onValue((dotArr) => {
+                     
+                     R.forEach((rec) => {
+                         let s = getDotShapeObj(rec);
+
+                         if(R.find((d) => { return d.name == rec.name; }, dotArr)){
+                             s.graphics = makeDot("#222");
+                         }else{
+                             s.graphics = makeDot(rec.color);
+                         };
+                         
+                     }, recArr);
+                 })
+             
+             
+             //--------------------------------------------------------------------------- drawLines
+             let drawLines = hitAccumulator
+                 .onValue((arr) => {
+                     
+                     lineLayer.removeAllChildren();
+                     
+                     let pairs = R.aperture(2, arr);
+                     
+                     R.forEach((p) => { lineLayer.addChild(makeLine(p)); }, pairs);
+                 })
+             
+
+             //--------------------------------------------------------------------------- correct
+             hitAccumulator
+                 .onValue((arr) => {
+                     let nameArr = R.map((o) => { return o.name; }, arr)
+                     if(R.equals(nameArr, patterns[ROUND])){ console.log('correct'); }
+                 })
+
+             
+             hitAccumulator
+                 .onValue((arr) => {
+//                     console.log(JSON.stringify(R.map((o) => { return o.name; }, arr)));
+                 })
+
+
+             //--------------------------------------------------------------------------- distance
+             function distance(pt1, pt2) {  
+                 return Math.sqrt(Math.pow((pt1.x - pt2.x), 2) + Math.pow((pt1.y - pt2.y), 2));
+             };
+
+
+             var ROUND = -1;
+             
+             //--------------------------------------------------------------------------- startGame
+             function startGame(){
+                 
+                 START_BUTTON.style.visibility = "hidden";
+                 TITLE_ELM.style.display = "none";
+
+                 cjs.Tween.get({}).wait(500).call(() => { startNewRound(); })
+             }
+
+
+             //--------------------------------------------------------------------------- endRound
+             function endRound(){
+
+                 cjs.Tween.get(lineLayer).to({alpha:0}, 200)
+                 cjs.Tween.get(dotLayer).to({alpha:0}, 1000)
+                 
+                 cjs.Tween.get(patternLineLayer).to({alpha:0}, 200)
+                 cjs.Tween.get(patternDotLayer).to({alpha:0}, 1000).call(() => { startNewRound(); })
+                 
+             }
+
+             
+             //--------------------------------------------------------------------------- startNewRound
+             function startNewRound(){
+
+                 if(ROUND < patterns.length - 1){
+
+                     ROUND++
+
+                     showPattern(patterns[ROUND]);
+                     lineLayer.removeAllChildren();
+
+                     
+                     R.forEach((rec) => {
+                         let s = getDotShapeObj(rec);
+                         let firstDot = patterns[ROUND][0];
+                         if(s.name == firstDot){
+                             s.graphics = makeDot("#222");
+                         }else{
+                             s.graphics = makeDot(rec.color);                             
+                         }
+                         
+                     }, recArr);
+                     
+                     
+                     cjs.Tween.get(patternDotLayer).to({alpha:1}, 200)
+                     cjs.Tween.get(patternLineLayer).to({alpha:1}, 1000)
+
+                     cjs.Tween.get(dotLayer).wait(1500).to({alpha:1}, 200)
+                     cjs.Tween.get(lineLayer).wait(1500).to({alpha:1}, 1000).call(() => {
+                         newRoundBus.push({pattern:patterns[ROUND]});
+                     });                     
+
+                 }else{
+                     TITLE_ELM.style.display = "block";
+                 };
+             }
+             
+             
+         };
+         
+         window.onload = init;
+         
+         
+        </script>
+        <style>
+         body {
+             font-family: arial;
+             padding:20px;
+             font-size:16px;
+             color:#222;
+             text-align:center;
+         }
+         canvas { border:1px solid #fff; display:block; margin:0px auto; cursor:pointer;}
+         button {
+             background-color: #ef06a4;
+             color:#fff;
+             font-size:24px;
+             border-radius:4px;
+             padding:5px 30px;
+             border:none;
+             box-shadow:1px 1px 1px 0px #ccc;
+             cursor:pointer;
+             outline:none;
+         }
+         button:hover, button:active {
+             background-color: #ff0ab1;
+         }
+         button:active {
+             transform: translate(0px, 1px);
+             box-shadow:none;
+         }
+
+         #container {
+             width:750px;
+             margin:0 auto;
+             position:relative;
+         }
+         
+         #timer {
+             text-align:center;
+             width:50px;
+             color:#ccc;
+             font-size:50px;
+             float:left;
+         }
+         #title {
+             position:absolute;
+             top:40px;
+             left:200px;             
+         }
+        </style>            
+    </head>
+    <body>
+
+        <div id="container">
+            <div id="timer">&nbsp;</div>
+            <canvas id="canvas1" width="680" height="300"></canvas>
+            <button id="startButton">start game</button>
+            <img src="title.png" id="title" />
+        </div>
+
+    </body>
+</html>
