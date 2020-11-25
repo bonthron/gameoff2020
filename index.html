@@ -7,8 +7,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bacon.js/3.0.13/Bacon.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.min.js"></script>
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
     <script type="text/javascript">
 
@@ -79,6 +77,8 @@
           stage.x = stage.y = 0.5;
 
 
+	  let MOON_SIZE = new cjs.Bitmap(queue.getResult("moonJPG")).getBounds().width;
+
 	  const DEAD_CENTER = {
 	      x:(stage.canvas.width/2),
 	      y:(stage.canvas.height/2)
@@ -104,6 +104,10 @@
 	      c.x = DEAD_CENTER.x;
 	      c.y = DEAD_CENTER.y;
 
+	      let space = new cjs.Shape();
+	      space.graphics.f("#000").dr(-3000,-3000,6000,6000);
+	      c.addChild(space);
+	      
 	      let bit = new cjs.Bitmap(queue.getResult("moonJPG"));
 	      bit.x = bit.y = -1816;
 	      c.addChild(bit);
@@ -205,7 +209,7 @@
 	      if(keys.arrowup)   { currentMoon.y+= 2 + (currentMoon.moonScale / 2)};
 	      if(keys.arrowleft) { currentMoon.x+= 2 + (currentMoon.moonScale / 2)};
 	      if(keys.arrowright){ currentMoon.x-= 2 + (currentMoon.moonScale / 2)};
-
+	      
 	      let scaleAmt = ((currentMoon.moonScale / 2) / 120)
 	      
 	      if(currentMoon.moonScale > 1){
@@ -294,3 +298,10 @@
 
   </body>
 </html>
+(- 3632 1100)
+(/ 2532 2.0)
+1266
+
+
+(- 4000 3632)
+(/ 368.0 2)
