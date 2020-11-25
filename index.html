@@ -12,9 +12,18 @@
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
     <script type="text/javascript">
 
+      var READY = false;
+      
       function stop(){
           cjs.Ticker.removeAllEventListeners();
       }
+
+      function start(){
+	  if(READY){
+	      init()
+	  }
+      }
+      
       
       const cjs = createjs;
 
@@ -34,17 +43,14 @@
 	  viewportFrame.x = DEAD_CENTER.x;
 	  viewportFrame.y = DEAD_CENTER.y;	  
 	  viewportFrame.alpha = 0.4;
-	  
-	  let sighting = new cjs.Shape();
-	  sighting.graphics
-	      .s("#ffffff")
-	      .dc(0,0,60)
-	  sighting.x = DEAD_CENTER.x;
-	  sighting.y = DEAD_CENTER.y
-	  sighting.alpha = 0.6;
 
-	  dash.addChild(viewportFrame)	  
-	  dash.addChild(sighting)	  
+	  let sight = new cjs.Bitmap(queue.getResult("sight"));
+	  sight.x = DEAD_CENTER.x - 60;
+	  sight.y = DEAD_CENTER.y - 60;
+	  sight.alpha = 0.9;
+
+	  dash.addChild(viewportFrame);
+	  dash.addChild(sight)	  
 
 	  return dash;
       }
@@ -67,7 +73,6 @@
 	  };
 	  
           cjs.Ticker.framerate = 60;
-          cjs.Ticker.timingMode = cjs.Ticker.RAF;
           
           let stage = new cjs.Stage("canvas1");
           cjs.Ticker.addEventListener('tick', stage);
@@ -81,7 +86,7 @@
 
 	  let trackpoint = { x: DEAD_CENTER.x, y: DEAD_CENTER.y };
 	  
-	  const viewPortSize = {w:650, h:350}
+	  const viewPortSize = {w:650, h:290}
 	  
 	  let dash = buildDashboard(DEAD_CENTER, viewPortSize);
 
@@ -161,6 +166,11 @@
 	  stage.addChild(dash);
 
 
+	  var soundProps = new createjs.PlayPropsConfig().set({loop: -1})
+	  var instance = cjs.Sound.play("sound", soundProps);
+
+
+	  
 	  //-------------------------------------------------------- nextLevel
 	  function nextLevel(current, next){
 
@@ -178,6 +188,10 @@
 
 	      ARR.push(m);
 	      INDEX++
+
+	      for(var i=0; i < ARR.length; i++){ // remove old moons
+		  if(i < (INDEX-1)){ ARR[i] = null; };
+	      };
 	  }
 
 
@@ -200,9 +214,9 @@
 	      }
 
 	      if(nextMoon.rotationDir == 1){
-		  nextMoon.rotation += 0.1;
+		  nextMoon.rotation += nextMoon.rotationAmt;
 	      }else{
-		  nextMoon.rotation -= 0.1;
+		  nextMoon.rotation -= nextMoon.rotationAmt;
 	      };
 	      
 	      if(currentMoon.moonScale > 2.5){
@@ -240,12 +254,16 @@
 	  return Math.floor(Math.random() * (max - min + 1) + min);
       }
       
-    var queue = new createjs.LoadQueue(true);
-    queue.on("complete", function(){ init(); });    
+      var queue = new createjs.LoadQueue(true);
+      queue.installPlugin(cjs.Sound);      
+      queue.on("complete", function(){ READY = true; 	      init(); });    
     queue.on("error", function(e){ console.log(e); });    
-    queue.loadManifest([
+
+      queue.loadManifest([
         {id:"moonJPG", src:"moonOpt.jpg"},
-        {id:"shadow", src:"shadow5.png"},	
+        {id:"shadow", src:"shadow5.png"},
+        {id:"sight", src:"sight.png"},
+        {id:"sound", src:"DescenteInfinie.ogg"}	
     ]);
       
     </script>
@@ -269,9 +287,9 @@
     <!-- <canvas id="canvas1" width="650" height="350"></canvas> -->
     <!-- <canvas id="canvas1" width="1200" height="800"></canvas> -->
     <a href="javascript:stop()" style="color:#ccc;">stop</a><br />
+    <a href="javascript:start()" style="color:#ccc;">start</a><br />    
 
     <canvas id="canvas1" width="1100" height="500" style="background-color:#000; width:100%;"></canvas>
-
 
 
   </body>
