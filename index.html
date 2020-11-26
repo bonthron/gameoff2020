@@ -7,6 +7,28 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+
+    <!-- 
+         Wanderer moon
+         smiling a
+         faintly ironical smile
+         at this
+         brilliant, dew-moistened
+         summer morning,
+         a detached
+         sleepily indifferent
+         smile, a
+         wanderer's smile,
+         if I should
+         buy a shirt
+         your color and
+         put on a necktie
+         sky-blue
+         where would they carry me?
+
+         - 1917, william carlos williams
+      -->
+    
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
     <script type="text/javascript">
 
@@ -17,9 +39,9 @@
       }
 
       function start(){
-	  if(READY){
-	      init()
-	  }
+          if(READY){
+              init()
+          }
       }
       
       
@@ -28,64 +50,80 @@
       //--------------------------------------------------------------------------- buildDashboard
       function buildDashboard(DEAD_CENTER, viewPortSize){
 
-	  let dash = new cjs.Container();
+          let dash = new cjs.Container();
 
-	  let viewportFrame = new cjs.Shape();
-	  viewportFrame.graphics
-	      .s("#ffffff")
-	      .dr((0 - (viewPortSize.w/2)),
-		  (0 - (viewPortSize.h/2)),
-		  viewPortSize.w,
-		  viewPortSize.h)
+          let viewportFrame = new cjs.Shape();
+          viewportFrame.graphics
+              .s("#ffffff")
+              .dr((0 - (viewPortSize.w/2)),
+                  (0 - (viewPortSize.h/2)),
+                  viewPortSize.w,
+                  viewPortSize.h)
 
-	  viewportFrame.x = DEAD_CENTER.x;
-	  viewportFrame.y = DEAD_CENTER.y;	  
-	  viewportFrame.alpha = 0.4;
+          viewportFrame.x = DEAD_CENTER.x;
+          viewportFrame.y = DEAD_CENTER.y;        
+          viewportFrame.alpha = 0.4;
 
-	  let crash = new cjs.Shape();
-	  crash.graphics
-	      .f("#ff0000")
-	      .dr((0 - (viewPortSize.w/2)),
-		  (0 - (viewPortSize.h/2)),
-		  viewPortSize.w,
-		  viewPortSize.h)
+          let crash = new cjs.Shape();
+          crash.graphics
+              .f("#ff0000")
+              .dr((0 - (viewPortSize.w/2)),
+                  (0 - (viewPortSize.h/2)),
+                  viewPortSize.w,
+                  viewPortSize.h)
 
-	  crash.x = DEAD_CENTER.x;
-	  crash.y = DEAD_CENTER.y;	  
-	  crash.alpha = 0.2;
-	  crash.visible = false;
+          crash.x = DEAD_CENTER.x;
+          crash.y = DEAD_CENTER.y;        
+          crash.alpha = 0.3;
+          crash.visible = false;
 
-	  let sight = new cjs.Bitmap(queue.getResult("sight"));
-	  sight.x = DEAD_CENTER.x - 60;
-	  sight.y = DEAD_CENTER.y - 60;
-	  sight.alpha = 0.9;
+          let pass = new cjs.Shape();
+          pass.graphics
+              .f("#00cc00")
+              .dr((0 - (viewPortSize.w/2)),
+                  (0 - (viewPortSize.h/2)),
+                  viewPortSize.w,
+                  viewPortSize.h)
 
-	  dash.crash = crash;
+          pass.x = DEAD_CENTER.x;
+          pass.y = DEAD_CENTER.y;        
+          pass.alpha = 0.3;
+          pass.visible = false;
+	  
 
-	  dash.addChild(crash);
-	  dash.addChild(viewportFrame);
-	  dash.addChild(sight)	  
+          let sight = new cjs.Bitmap(queue.getResult("sight"));
+          sight.x = DEAD_CENTER.x - 60;
+          sight.y = DEAD_CENTER.y - 60;
+          sight.alpha = 0.9;
 
-	  return dash;
+          dash.crash = crash;
+          dash.pass = pass;
+
+          dash.addChild(crash);
+          dash.addChild(pass);	  
+          dash.addChild(viewportFrame);
+          dash.addChild(sight)    
+
+          return dash;
       }
 
       
       //--------------------------------------------------------------------------- init
       function init(){
 
-	  let keys = {arrowup:0, arrowdown:0, arrowleft:0, arrowright:0};
+          let keys = {arrowup:0, arrowdown:0, arrowleft:0, arrowright:0};
 
-	  document.onkeydown = (e) => {
-	      if(e.repeat){return;};
-	      let k = e.key.toLowerCase();
-	      if(keys.hasOwnProperty(k)){ keys[k] = 1; };
-	  };
-	  document.onkeyup = (e) => {
-	      if(e.repeat){return;};
-	      let k = e.key.toLowerCase();
-	      if(keys.hasOwnProperty(k)){ keys[k] = 0; };
-	  };
-	  
+          document.onkeydown = (e) => {
+              if(e.repeat){return;};
+              let k = e.key.toLowerCase();
+              if(keys.hasOwnProperty(k)){ keys[k] = 1; };
+          };
+          document.onkeyup = (e) => {
+              if(e.repeat){return;};
+              let k = e.key.toLowerCase();
+              if(keys.hasOwnProperty(k)){ keys[k] = 0; };
+          };
+          
           cjs.Ticker.framerate = 60;
           
           let stage = new cjs.Stage("canvas1");
@@ -93,216 +131,228 @@
           stage.x = stage.y = 0.5;
 
 
-	  let MOON_SIZE = new cjs.Bitmap(queue.getResult("moonJPG")).getBounds().width;
+          let MOON_SIZE = new cjs.Bitmap(queue.getResult("moonJPG")).getBounds().width;
 
-	  const DEAD_CENTER = {
-	      x:(stage.canvas.width/2),
-	      y:(stage.canvas.height/2)
-	  };
+          const DEAD_CENTER = {
+              x:(stage.canvas.width/2),
+              y:(stage.canvas.height/2)
+          };
 
-	  let trackpoint = { x: DEAD_CENTER.x, y: DEAD_CENTER.y };
+          let trackpoint = { x: DEAD_CENTER.x, y: DEAD_CENTER.y };
+          
+          const viewPortSize = {w:650, h:290}
+          
+          let dash = buildDashboard(DEAD_CENTER, viewPortSize);
+
+          
+          let MASK = new cjs.Shape();
+          MASK.graphics.f("#000000").dc(0,0,100);
+          
+          let moonCount = 0;
+
+          
+          //-------------------------------------------------------- makeMoon
+          function makeMoon(){
+
+              let c = new cjs.Container();
+              c.x = DEAD_CENTER.x;
+              c.y = DEAD_CENTER.y;
+
+              let space = new cjs.Shape();
+              space.graphics.f("#000").dr(-3000,-3000,6000,6000);
+              c.addChild(space);
+              
+              let bit = new cjs.Bitmap(queue.getResult("moonJPG"));
+              bit.x = bit.y = -1816;
+              c.addChild(bit);
+
+
+              for(var i = 0; i < 10; i++){
+                  let x = new cjs.Bitmap(queue.getResult("shadow"));
+                  x.scale = random(0,20)
+                  x.regX = x.regY = random(-1000,1000)
+                  x.rotation = Math.floor(Math.random() * 358) + 1;
+                  x.alpha = Math.random();
+                  c.addChild(x);
+              }
+
+              let shade = new cjs.Shape();
+              shade.graphics.f("#000000").dc(0,0,2000)
+              shade.alpha = 0.2;
+              c.shade = shade;
+              c.addChild(shade);
+              
+              let trackdot = new cjs.Shape();
+              trackdot.graphics.f("#ccc").dc(0,0,1)
+              trackdot.x = random(100,300)
+              c.trackdot = trackdot;
+              c.addChild(trackdot);
+
+              c.mask = new cjs.Shape();
+              c.mask.graphics.f("#000000").dc(0,0,100);
+              
+              c.name = moonCount;
+              moonCount++;
+              c.visible = false;
+
+              c.moonScale = 0.25;
+              c.maskScale = 0.25;             
+              
+              c.rotation = Math.floor(Math.random() * 358) + 1
+              c.rotationDir = (Math.random() > .45) ? 1 : 0;
+              c.rotationAmt = random(1,3)/10;
+              
+              return c;
+          }
+
+          let INDEX = 0;
+          let ARR = []
+
+          // currentMoon
+          ARR.push(makeMoon())
+          ARR[0].visible = true;
+          ARR[0].mask = null;
+          ARR[0].shade.alpha = 0;
+          
+          stage.addChild(ARR[0])
+          
+          // nextMoon
+          ARR.push(makeMoon())
+          ARR[1].visible = true;
+          stage.addChild(ARR[1])
+          
+          stage.addChild(dash);
+
+          var soundProps = new createjs.PlayPropsConfig().set({loop: -1})
+          var instance = cjs.Sound.play("sound", soundProps);
+
 	  
-	  const viewPortSize = {w:650, h:290}
-	  
-	  let dash = buildDashboard(DEAD_CENTER, viewPortSize);
+          //-------------------------------------------------------- nextLevel
+          function nextLevel(current, next, transPt){
 
-	  
-	  let MASK = new cjs.Shape();
-	  MASK.graphics.f("#000000").dc(0,0,100);
-	  
-	  let moonCount = 0;
+              let hit = !concentric(DEAD_CENTER,70,transPt,(100 * next.maskScale));
 
-	  
-	  //-------------------------------------------------------- makeMoon
-	  function makeMoon(){
-
-	      let c = new cjs.Container();
-	      c.x = DEAD_CENTER.x;
-	      c.y = DEAD_CENTER.y;
-
-	      let space = new cjs.Shape();
-	      space.graphics.f("#000").dr(-3000,-3000,6000,6000);
-	      c.addChild(space);
-	      
-	      let bit = new cjs.Bitmap(queue.getResult("moonJPG"));
-	      bit.x = bit.y = -1816;
-	      c.addChild(bit);
-
-
-	      for(var i = 0; i < 10; i++){
-		  let x = new cjs.Bitmap(queue.getResult("shadow"));
-		  x.scale = random(0,20)
-		  x.regX = x.regY = random(-1000,1000)
-		  x.rotation = Math.floor(Math.random() * 358) + 1;
-		  x.alpha = Math.random();
-		  c.addChild(x);
+              if(hit){
+                  cjs.Tween.get(dash.crash)
+		      .to({visible:true})		  
+                      .wait(500)
+		      .to({visible:false})
+                      .wait(200)
+		      .to({visible:true})
+                      .wait(500)
+		      .to({visible:false})
+		  
+		  next.mask.x = DEAD_CENTER.x;
+		  next.mask.y = DEAD_CENTER.y;
+              }else{
+                  dash.pass.visible = true;
+                  cjs.Tween.get(dash.pass)
+		      .to({visible:true})
+		      .wait(300)
+		      .to({visible:false})
 	      }
+              
+              stage.removeChild(dash);
+              
+              cjs.Tween.get(next.mask).to({scale:20, x:DEAD_CENTER.x, y:DEAD_CENTER.y}, 3000).call(()=>{
+                  stage.removeChild(current);
+                  next.mask = null;
+              });
 
-	      let shade = new cjs.Shape();
-	      shade.graphics.f("#000000").dc(0,0,2000)
-	      shade.alpha = 0.2;
-	      c.shade = shade;
-	      c.addChild(shade);
-	      
-	      let trackdot = new cjs.Shape();
-	      trackdot.graphics.f("#ccc").dc(0,0,1)
-	      trackdot.x = random(100,300)
-	      c.trackdot = trackdot;
-	      c.addChild(trackdot);
+              let m = makeMoon();
+              m.visible = true;
+              stage.addChild(m);
+              stage.addChild(dash);           
 
-	      c.mask = new cjs.Shape();
-	      c.mask.graphics.f("#000000").dc(0,0,100);
-	      
-	      c.name = moonCount;
-	      moonCount++;
-	      c.visible = false;
+              ARR.push(m);
+              INDEX++
 
-	      c.moonScale = 0.25;
-	      c.maskScale = 0.25;	      
-	      
-	      c.rotation = Math.floor(Math.random() * 358) + 1
-	      c.rotationDir = (Math.random() > .5) ? 1 : 0;
-	      c.rotationAmt = random(1,3)/10;
-	      
-	      return c;
-	  }
-
-	  let INDEX = 0;
-	  let ARR = []
-
-	  // currentMoon
-	  ARR.push(makeMoon())
-	  ARR[0].visible = true;
-	  ARR[0].mask = null;
-	  ARR[0].shade.alpha = 0;
-	  
-	  stage.addChild(ARR[0])
-	  
-	  // nextMoon
-	  ARR.push(makeMoon())
-	  ARR[1].visible = true;
-	  stage.addChild(ARR[1])
-	  
-	  stage.addChild(dash);
-
-	  
-	  var soundProps = new createjs.PlayPropsConfig().set({loop: -1})
-	  var instance = cjs.Sound.play("sound", soundProps);
+              for(var i=0; i < ARR.length; i++){ // remove old moons
+                  if(i < (INDEX-1)){ ARR[i] = null; };
+              };
+          }
 
 
-	  //-------------------------------------------------------- nextLevel
-	  function nextLevel(current, next, transPt){
-
-
-	      if(!concentric(DEAD_CENTER,70,transPt,(100 * next.maskScale))){
-		  dash.crash.visible = true;
-		  cjs.Tween.get(dash.crash)
-		      .wait(500).to({visible:false})
-		      .wait(200).to({visible:true})
-		      .wait(500).to({visible:false})
-	      }
-	      
-	      stage.removeChild(dash);
-	      
-	      cjs.Tween.get(next.mask).to({scale:20}, 3000).call(()=>{
-		  stage.removeChild(current);
-		  next.mask = null;
-	      })
-
-	      let m = makeMoon();
-	      m.visible = true;
-	      stage.addChild(m);
-	      stage.addChild(dash);	      
-
-	      ARR.push(m);
-	      INDEX++
-
-	      for(var i=0; i < ARR.length; i++){ // remove old moons
-		  if(i < (INDEX-1)){ ARR[i] = null; };
-	      };
-	  }
-
-
-	  //-------------------------------------------------------- Ticker
+          //-------------------------------------------------------- Ticker
           cjs.Ticker.addEventListener('tick', function(){
-	      
-	      let currentMoon = ARR[INDEX];
-	      let nextMoon = ARR[INDEX + 1];
-	      
-	      if(keys.arrowdown) { currentMoon.y-= 2 + (currentMoon.moonScale / 2)};
-	      if(keys.arrowup)   { currentMoon.y+= 2 + (currentMoon.moonScale / 2)};
-	      if(keys.arrowleft) { currentMoon.x+= 2 + (currentMoon.moonScale / 2)};
-	      if(keys.arrowright){ currentMoon.x-= 2 + (currentMoon.moonScale / 2)};
-	      
-	      let scaleAmt = ((currentMoon.moonScale / 2) / 120)
-	      
-	      if(currentMoon.moonScale > 1){
-		  nextMoon.shade.alpha -= 0.001;
-		  currentMoon.shade.alpha += 0.002;
-	      }
+              
+              let currentMoon = ARR[INDEX];
+              let nextMoon = ARR[INDEX + 1];
+              
+              if(keys.arrowdown) { currentMoon.y-= 2 + (currentMoon.moonScale / 2)};
+              if(keys.arrowup)   { currentMoon.y+= 2 + (currentMoon.moonScale / 2)};
+              if(keys.arrowleft) { currentMoon.x+= 2 + (currentMoon.moonScale / 2)};
+              if(keys.arrowright){ currentMoon.x-= 2 + (currentMoon.moonScale / 2)};
+              
+              let scaleAmt = ((currentMoon.moonScale / 2) / 120)
+              
+              if(currentMoon.moonScale > 1){
+                  nextMoon.shade.alpha -= 0.001;
+                  currentMoon.shade.alpha += 0.002;
+              }
 
-	      if(nextMoon.rotationDir == 1){
-		  nextMoon.rotation += nextMoon.rotationAmt;
-	      }else{
-		  nextMoon.rotation -= nextMoon.rotationAmt;
-	      };
-	      
-	      if(currentMoon.moonScale > 2.5){
-		  nextMoon.moonScale += 0.001;
-	      }
-	      
-	      if(currentMoon.moonScale < 3){
-		  currentMoon.moonScale += scaleAmt;
-		  nextMoon.maskScale += scaleAmt;
-	      }
+              if(nextMoon.rotationDir == 1){
+                  nextMoon.rotation += nextMoon.rotationAmt;
+              }else{
+                  nextMoon.rotation -= nextMoon.rotationAmt;
+              };
+              
+              if(currentMoon.moonScale > 2.5){
+                  nextMoon.moonScale += 0.001;
+              }
+              
+              if(currentMoon.moonScale < 3){
+                  currentMoon.moonScale += scaleAmt;
+                  nextMoon.maskScale += scaleAmt;
+              }
 
-	      if(currentMoon.rotationDir == 1){
-		  currentMoon.rotation += currentMoon.rotationAmt;
-	      }else{
-		  currentMoon.rotation -= currentMoon.rotationAmt;
-	      };
-	      
-	      let transPt = currentMoon.localToGlobal(currentMoon.trackdot.x, currentMoon.trackdot.y);
-	      nextMoon.mask.x = transPt.x;
-	      nextMoon.mask.y = transPt.y;
+              if(currentMoon.rotationDir == 1){
+                  currentMoon.rotation += currentMoon.rotationAmt;
+              }else{
+                  currentMoon.rotation -= currentMoon.rotationAmt;
+              };
+              
+              let transPt = currentMoon.localToGlobal(currentMoon.trackdot.x, currentMoon.trackdot.y);
+              nextMoon.mask.x = transPt.x;
+              nextMoon.mask.y = transPt.y;
 
-	      currentMoon.scale = currentMoon.moonScale;
-	      nextMoon.scale = nextMoon.moonScale;	      
-	      nextMoon.mask.scale = nextMoon.maskScale;
-	      
-	      if(currentMoon.moonScale > 3) {
-		  nextLevel(currentMoon, nextMoon, transPt);
-	      }	      
+              currentMoon.scale = currentMoon.moonScale;
+              nextMoon.scale = nextMoon.moonScale;            
+              nextMoon.mask.scale = nextMoon.maskScale;
+              
+              if(currentMoon.moonScale > 3) {
+                  nextLevel(currentMoon, nextMoon, transPt);
+              }       
 
-	  });	  
+          });     
 
       }
       
       function random(min, max) {
-	  return Math.floor(Math.random() * (max - min + 1) + min);
+          return Math.floor(Math.random() * (max - min + 1) + min);
       }
       
       function getDistance(pt1, pt2){
-	  var distance = Math.sqrt(Math.pow((pt2.x - pt1.x),2) + Math.pow((pt2.y - pt1.y),2));
-	  return distance;
+          var distance = Math.sqrt(Math.pow((pt2.x - pt1.x),2) + Math.pow((pt2.y - pt1.y),2));
+          return distance;
       }
 
       function concentric(center1, radius1, center2, radius2){
-	  var d = getDistance(center1, center2);
-	  return ((d + radius1) < radius2);
+          var d = getDistance(center1, center2);
+          return ((d + radius1) < radius2);
       }
 
       
       var queue = new createjs.LoadQueue(true);
       queue.installPlugin(cjs.Sound);      
-      queue.on("complete", function(){ READY = true; 	      init(); });    
+      queue.on("complete", function(){ READY = true;          init(); });    
       queue.on("error", function(e){ console.log(e); });    
 
       queue.loadManifest([
           {id:"moonJPG", src:"moonOpt.jpg"},
           {id:"shadow", src:"shadow5.png"},
           {id:"sight", src:"sight.png"},
-          {id:"sound", src:"DescenteInfinie.ogg"}	
+          {id:"sound", src:"DescenteInfinie.ogg"}       
       ]);
       
     </script>
@@ -313,7 +363,7 @@
           font-size:16px;
           color:#222;
           text-align:center;
-	  background-color:#000;
+          background-color:#000;
       }
       canvas { display:block; margin:0px auto;}
     </style>
