@@ -21,7 +21,6 @@
 	 defying our cosmology
 	 
 	 - game design by jason bonthron 2020
-	 
       -->
     
     <script src="createjs.min.js"></script>
@@ -50,6 +49,7 @@
 	  let DEPTH = 0;
 	  let DEPTH_SCORED = 0;	  
 	  let startScreen;
+	  let levelColor = 0;
 	  
 	  
 	  //--------------------------------------------------------------------------------- initKeys
@@ -173,6 +173,17 @@
 	      bit.x = bit.y = -1816;
 	      inner.addChild(bit);
 
+	      let colors = ["#00FFFF", "#ff0000", "#663399", "#32CD32", "#FF1493"];
+	      if((DEPTH > 0) && (DEPTH % 5 == 0)){
+		  let color = new cjs.Shape();
+		  color.graphics.f(colors[levelColor]).dc(0,0,1816);
+		  color.alpha = 0.5;
+		  inner.addChild(color);
+
+		  levelColor++
+		  if(levelColor >= (colors.length-1)){ levelColor = 0; };
+	      };
+	      
 	      for(var i = 0; i < 10; i++){
                   let x = new cjs.Bitmap(queue.getResult("shadow"));
                   x.scale = random(0,20)
@@ -303,7 +314,11 @@
               INDEX = 0;
               ARR = [];
 	      SCALE_DIVISOR = 100;
-
+	      DEPTH = 0;
+	      DEPTH_SCORED = 0;	  	      
+              MOON_COUNT = 0;
+	      levelColor = 0;
+	      
 	      let soundProps = new cjs.PlayPropsConfig().set({loop: -1})
 	      soundInstance = cjs.Sound.play("sound", soundProps);
 
@@ -344,9 +359,8 @@
               DASH = buildDashboard(DEAD_CENTER, viewPortSize);
 
 	      startScreen = new cjs.Shape();
-	      startScreen.graphics.f("#000").dr(-10,-10, STAGE.canvas.width + 10, STAGE.canvas.width+10);
+	      startScreen.graphics.f("#111").dr(-10,-10, STAGE.canvas.width + 10, STAGE.canvas.width+10);
 
-	      
 
               //--------------------------------------------------------------------------------- tick
               cjs.Ticker.addEventListener('tick', function(){
@@ -481,6 +495,7 @@
       #splash {
 	  background: url("moon.png") no-repeat fixed calc(100% + 100px) -100px;
       }
+
       h1 {
 	  text-shadow: 2px 2px #000;
       }
@@ -488,9 +503,8 @@
       .fadein {
           animation: fadein 2s;
       }
-
       @keyframes fadein {
-	 from { opacity: 0; }
+	  from { opacity: 0; }
 	  to  { opacity: 1; }
       }      
     </style>
@@ -529,6 +543,8 @@
 
 	<img src="keyboard.png" class="w-100" /><br />
 
+	<div style="position:absolute; bottom:10px; right:10px; color:#444;">&copy; 2020 jason bonthron</div>
+	
       </div>
     </div>
 
