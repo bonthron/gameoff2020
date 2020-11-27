@@ -3,12 +3,14 @@
   <head>
     <title>For the Moon is Hollow and I Have Touched the Sky</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap" rel="stylesheet">    
     <meta http-equiv="Pragma" content="no-cache, no-store" />
     <meta http-equiv="Expires" content="31 Dec 1997" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
-
+    <link rel="stylesheet" href="tachyons.min.css" />
+      
     <!-- 
          Wanderer moon
          smiling a
@@ -45,7 +47,7 @@
 	  let KEYS = {arrowup:false, arrowdown:false, arrowleft:false, arrowright:false, spacebar:false};
 	  let soundInstance;
 
-	  let PAUSED = false;
+	  let PAUSED = true;
           let DEAD_CENTER;
           let INDEX = 0;
           let ARR = [];
@@ -277,21 +279,27 @@
               };
 
               // currentMoon
-              ARR.push(makeMoon())
+              ARR.push(makeMoon());
               ARR[0].visible = true;
               ARR[0].mask = null;
               ARR[0].shade.alpha = 0;
-              STAGE.addChild(ARR[0])
+              STAGE.addChild(ARR[0]);
               
               // nextMoon
-              ARR.push(makeMoon())
+              ARR.push(makeMoon());
               ARR[1].visible = true;
-              STAGE.addChild(ARR[1])
+              STAGE.addChild(ARR[1]);
 
 
               DASH = buildDashboard(DEAD_CENTER, viewPortSize);          
               STAGE.addChild(DASH);
 
+
+	      let startScreen = new cjs.Shape();
+	      startScreen.graphics.f("#000").dr(-10,-10, STAGE.canvas.width + 10, STAGE.canvas.width+10);
+	      STAGE.addChild(startScreen);
+
+	      
 
               //--------------------------------------------------------------------------------- tick
               cjs.Ticker.addEventListener('tick', function(){
@@ -313,7 +321,7 @@
 		  if(currentMoon.moonScale > 1){
                       nextMoon.shade.alpha -= 0.001;
                       currentMoon.shade.alpha += 0.002;
-		  }
+		  };
 
 		  if(nextMoon.rotationDir == 1){
                       nextMoon.rotation += nextMoon.rotationAmt;
@@ -323,12 +331,12 @@
 		  
 		  if(currentMoon.moonScale > 2.5){
                       nextMoon.moonScale += 0.001;
-		  }
+		  };
 		  
 		  if(currentMoon.moonScale < 3){
                       currentMoon.moonScale += scaleAmt;
                       nextMoon.maskScale += scaleAmt;
-		  }
+		  };
 
 		  if(currentMoon.rotationDir == 1){
                       currentMoon.rotation += currentMoon.rotationAmt;
@@ -346,10 +354,9 @@
 		  
 		  if(currentMoon.moonScale > 3) {
                       nextLevel(currentMoon, nextMoon, transPt);
-		  }       
+		  };       
 
               });
-
 	      
 	  }
 
@@ -388,11 +395,13 @@
 
     <style>
       body {
-          font-family: arial;
+	  padding:0;
+	  marign:0;
+          font-family: 'ubuntu', sans-serif;
           font-size:16px;
-          color:#222;
+          color:#fefefe;
           text-align:center;
-          background-color:#000;
+          background-color:#111;
       }
       canvas { display:block; margin:0px auto;}
     </style>
@@ -400,8 +409,40 @@
   </head>
   <body>
 
-    <canvas id="canvas1" width="1100" height="500" style="background-color:#000; width:100%;"></canvas>
+    <div>
+      <!--    <canvas id="canvas1" width="1100" height="500" style="background-color:#000; width:100%;"></canvas>-->
 
+      <div class="ph5-ns pa3 tl">
+	<h1 class="f2 lh-title">For the Moon is Hollow<br />and I Have Touched the Sky</h1>
+
+	<div class="f5">
+	  there's a fissure in the rock<br />
+	  within<br />
+	  another sphere<br />
+	  then another<br />
+	  infinite concentric systems<br />
+	  defying our cosmology<br />
+	</div>
+	
+	<div class="tc">
+
+	  <button class="f4 br2 ba bw1 ph3 pv2 mv5 dib b--near-white near-white" style="background-color:rgba(255,255,255,0.2); cursor:pointer;">Begin &nbsp;Launch &nbsp;Sequence</button><br />
+
+	  <div class="w-100" style="max-width:600px; margin-left:auto; margin-right:auto;">
+	    <img src="keyboard.png" class="w-100"><br />
+
+	    <div class="f5 tl">
+	      Arrow Keys = move<br />
+	      WASD Keys = move<br />
+	      spacebar = pause<br />
+	    </div>
+	  </div>		  
+	</div>
+	
+
+      </div>
+    </div>
+    
   </body>
 </html>
 
