@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>For the Moon is Hollow and I Have Touched the Sky</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap" rel="stylesheet">    
+    <meta http-equiv="Pragma" content="no-cache, no-store" />
+    <meta http-equiv="Expires" content="31 Dec 1997" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <link rel="stylesheet" href="tachyons.min.css" />
+    
+    <!-- 
+	 For the Moon is Hollow and I Have Touched the Sky
+
+	 there's a fissure in the rock
+	 another sphere within
+	 and another
+	 infinite concentric systems
+	 defying our cosmology
+	 
+	 - game design by jason bonthron 2020
+      -->
+    
+    <script src="createjs.min.js"></script>
+    <script type="text/javascript">
+
+      const cjs = createjs;
+      
+      (function () {
+	  
+          cjs.Ticker.framerate = 60;
+          cjs.Ticker.timingMode = cjs.Ticker.RAF;
+
+	  const viewPortSize = { w:650, h:290 };
+	  
+	  let KEYS = {arrowup:false, arrowdown:false, arrowleft:false, arrowright:false, spacebar:false};
+	  let soundInstance;
+
+	  let PAUSED = true;
+          let DEAD_CENTER;
+          let INDEX = 0;
+          let ARR = [];
+	  let DASH;
+	  let STAGE;
+	  let SCALE_DIVISOR = 100;
+          let MOON_COUNT = 0;
+	  let DEPTH = 0;
+	  let DEPTH_SCORED = 0;	  
+	  let startScreen;
+	  let levelColor = 0;
+	  
+	  
+	  //--------------------------------------------------------------------------------- initKeys
+	  function initKeys(){
+	      
+              let codes = {38: "arrowup", "ArrowUp": "arrowup", "Up": "arrowup",
+			   87: "arrowup", "w": "arrowup",			   
+			   40: "arrowdown", "ArrowDown": "arrowdown", "Down": "arrowdown",
+			   83: "arrowdown", "s": "arrowdown",			   
+			   37: "arrowleft", "ArrowLeft": "arrowleft", "Left": "arrowleft",
+			   65: "arrowleft", "a": "arrowleft",
+			   39: "arrowright", "ArrowRight": "arrowright", "Right": "arrowright",
+			   68: "arrowright", "d": "arrowright",			   
+			   32: "spacebar", " ": "spacebar" };
+	      
+              document.onkeydown = (e) => {
+		  if(e.repeat){return;};
+		  let c = event.key || event.keyCode;
+		  let k = codes[c];
+		  if(KEYS.hasOwnProperty(k)){ KEYS[k] = true; };
+
+		  if(k == "spacebar"){ togglePause(); };
+              };
+	      
+              document.onkeyup = (e) => {
+		  if(e.repeat){return;};
+		  let c = event.key || event.keyCode;
+		  let k = codes[c];
+
+		  if(KEYS.hasOwnProperty(k)){ KEYS[k] = false; };
+              };
+	  }
+
+	  
+	  //------------------------------------------------------------------------------- togglePause
+	  function togglePause(){
+
+	      PAUSED = !PAUSED;
+	      soundInstance.paused = !soundInstance.paused;
+	  }
+
+
+          //------------------------------------------------------------------------ buildDashboard
+          function buildDashboard(DEAD_CENTER, viewPortSize){
+
+	      let dash = new cjs.Container();
+	      
+	      let vpX = (0 - (viewPortSize.w/2));
+	      let vpY = (0 - (viewPortSize.h/2));
+	      let vpW = viewPortSize.w;
+	      let vpH = viewPortSize.h;       
+	      
+	      let viewportFrame = new cjs.Shape();
+	      viewportFrame.graphics.s("#ffffff").dr(vpX,vpY,vpW,vpH);
+	      viewportFrame.x = DEAD_CENTER.x;
+	      viewportFrame.y = DEAD_CENTER.y;        
+	      viewportFrame.alpha = 0.4;
+	      viewportFrame.cache(vpX,vpY,vpW,vpH);
+	      
+	      let crash = new cjs.Shape();
+	      crash.graphics.f("#ff0000").dr(vpX,vpY,vpW,vpH);
+	      crash.x = DEAD_CENTER.x;
+	      crash.y = DEAD_CENTER.y;        
+	      crash.alpha = 0.3;
+	      crash.visible = false;
+	      crash.cache(vpX,vpY,vpW,vpH);           
+	      
+	      let pass = new cjs.Shape();
+	      pass.graphics.f("#00cc00").dr(vpX,vpY,vpW,vpH);                
+	      pass.x = DEAD_CENTER.x;
+	      pass.y = DEAD_CENTER.y;        
+	      pass.alpha = 0.3;
+	      pass.visible = false;
+	      pass.cache(vpX,vpY,vpW,vpH);            
+	      
+	      let sight = new cjs.Bitmap(queue.getResult("sight"));
+	      sight.x = DEAD_CENTER.x - 60;
+	      sight.y = DEAD_CENTER.y - 60;
+	      sight.alpha = 0.9;
+	      
+	      dash.addChild(crash);
+	      dash.addChild(pass);        
+	      dash.addChild(viewportFrame);
+	      dash.addChild(sight)    
+	      
+	      dash.crash = crash;
+	      dash.pass = pass;
+	      
+	      return dash;
+          }
+
+          
+          //------------------------------------------------------------------------------ makeMoon     
+          function makeMoon(){
+
+	      let c = new cjs.Container();
+	      c.x = DEAD_CENTER.x;
+	      c.y = DEAD_CENTER.y;
+
+	      c.mask = new cjs.Shape();
+	      c.mask.graphics.f("#000000").dc(0,0,100);
+	      
+	      c.name = MOON_COUNT;
+	      MOON_COUNT++;
+	      c.visible = false;
+
+	      c.moonScale = 0.25;
+	      c.maskScale = 0.25;             
+	      
+	      c.rotation = Math.floor(Math.random() * 358) + 1
+	      c.rotationDir = (Math.random() > .45) ? 1 : 0;
+	      c.rotationAmt = random(1,3)/10;
+
+	      let inner = new cjs.Container();
+	      
+	      let space = new cjs.Shape();
+	      space.graphics.f("#000").dr(-3000,-3000,6000,6000);
+	      inner.addChild(space);
+	      
+	      let bit = new cjs.Bitmap(queue.getResult("moonJPG"));
+	      bit.x = bit.y = -1816;
+	      inner.addChild(bit);
+
+	      if((DEPTH > 3) && (Math.random() < .3)){
+		  let moai = new cjs.Bitmap(queue.getResult("moai"));
+		  moai.regX = 100;
+		  moai.regY = 200;		  
+		  moai.x = DEAD_CENTER.x + random(100,150);
+		  moai.y = DEAD_CENTER.y;
+		  moai.alpha = 0.9;
+		  let angle = Math.atan2((moai.y - DEAD_CENTER.y), (moai.x - DEAD_CENTER.x));	      
+		  moai.rotation = use360circle(radToDegree(angle)) + 180;
+		  inner.addChild(moai);
+	      };
+	      
+	      let colors = ["#00FFFF", "#FF69B4", "#B200FF", "#32CD32", "#FF1493"];
+	      if((DEPTH > 1) && (DEPTH % 5 == 0)){
+		  let color = new cjs.Shape();
+		  color.graphics.f(colors[levelColor]).dc(0,0,1816);
+		  color.alpha = 0.3;
+		  inner.addChild(color);
+
+		  levelColor++
+		  if(levelColor >= (colors.length-1)){ levelColor = 0; };
+	      };
+	      
+	      for(var i = 0; i < 10; i++){
+                  let x = new cjs.Bitmap(queue.getResult("shadow"));
+                  x.scale = random(0,20)
+                  x.regX = x.regY = random(-1000,1000)
+                  x.rotation = Math.floor(Math.random() * 358) + 1;
+                  x.alpha = Math.random();
+                  inner.addChild(x);
+	      }
+	      	      
+	      
+	      let trackdot = new cjs.Shape();
+	      trackdot.graphics.f("#ccc").dc(0,0,1);
+	      trackdot.x = random(100,350);
+	      c.trackdot = trackdot;
+	      inner.addChild(trackdot);
+
+	      let shade = new cjs.Shape();
+	      shade.graphics.f("#000000").dc(0,0,2000);
+	      shade.alpha = 0.2;
+	      c.shade = shade;
+
+	      inner.cache(-3000,-3000,6000,6000);             
+	      c.addChild(inner);
+	      c.addChild(shade);
+	      
+	      return c;
+          }
+
+	  
+          //----------------------------------------------------------------------------- nextLevel
+          function nextLevel(current, next, transPt){
+
+	      DEPTH++;
+	      
+	      let hit = !concentric(DEAD_CENTER,70,transPt,(100 * next.maskScale));
+	      
+	      if(hit){
+		  
+		  SCALE_DIVISOR -= 20;
+		  if(SCALE_DIVISOR < 20){ gameOver(); return; };
+		  
+                  cjs.Tween.get(DASH.crash)
+		      .to({visible:true})                 
+		      .wait(500)
+		      .to({visible:false})
+		      .wait(200)
+		      .to({visible:true})
+		      .wait(500)
+		      .to({visible:false})
+                  
+                  next.mask.x = DEAD_CENTER.x;
+                  next.mask.y = DEAD_CENTER.y;
+		  
+	      }else{
+		  DEPTH_SCORED++;
+		  
+                  DASH.pass.visible = true;
+                  cjs.Tween.get(DASH.pass)
+		      .to({visible:true})
+		      .wait(300)
+		      .to({visible:false})
+	      };
+	      
+	      STAGE.removeChild(DASH);
+	      
+	      cjs.Tween.get(next.mask).to({scale:6, x:DEAD_CENTER.x, y:DEAD_CENTER.y}, 1000).call(()=>{
+                  STAGE.removeChild(current);
+                  next.mask = null;
+	      });
+	      
+	      let m = makeMoon();
+	      STAGE.addChild(m);
+	      
+	      ARR.push(m);
+	      INDEX++
+
+	      if((DEPTH > 3) && (DEPTH % 6  == 0)){
+		  let ufo = new cjs.Bitmap(queue.getResult("ufo"));
+		  ufo.x = DEAD_CENTER.x - 2000;
+		  ufo.y = DEAD_CENTER.y + 50
+		  STAGE.addChild(ufo);
+		  cjs.Tween.get(ufo).to({x:2000, y: (DEAD_CENTER.y + 50) - random(0,1000)}, 5000).call(() => { STAGE.removeChild(ufo); })
+	      }
+	      
+	      STAGE.addChild(DASH);
+	      
+	      document.getElementById("depth").innerHTML = DEPTH_SCORED + ":" + DEPTH;
+	      
+	      for(var i=0; i < ARR.length; i++){ // remove old moons
+                  if(i < (INDEX-1)){ ARR[i] = null; };
+	      };
+          }
+	  
+	  
+          //------------------------------------------------------------------------------ gameOver
+          function gameOver(){
+
+	      togglePause();
+	      STAGE.removeAllChildren();	      
+	      STAGE.addChild(startScreen);
+	      startScreen.alpha = 1;
+
+	      cjs.Tween.get({}).wait(1000).call(() => {
+		  document.getElementById("gameContainer").style.display = "none";	      		  
+		  document.getElementById("splash").style.display = "block";		  
+		  document.getElementById("splash").classList.add("fadein");
+		  document.getElementById("depth").innerHTML = 0 + ":" + 0;
+		  document.getElementById("launch").focus();		  
+	      })
+	  }
+
+	  
+	  //--------------------------------------------------------------------------------- start
+	  function start(){
+
+	      let m = makeMoon();
+              m.visible = true;
+              m.mask = null;
+              m.shade.alpha = 0;
+	      m.scale = m.moonScale;	      
+
+	      STAGE.addChild(m);
+	      STAGE.addChild(startScreen);
+	      
+	      document.getElementById("splash").style.display = "none";
+	      document.getElementById("gameContainer").style.display = "flex";	      
+
+	      cjs.Tween.get(startScreen).to({alpha:0}, 2000, cjs.Ease.circIn).call(() => {
+		  STAGE.removeChild(startScreen);
+		  newGame();
+	      });
+	  }
+
+
+	  //--------------------------------------------------------------------------------- newGame
+	  function newGame(){
+
+              INDEX = 0;
+              ARR = [];
+	      SCALE_DIVISOR = 100;
+	      DEPTH = 0;
+	      DEPTH_SCORED = 0;	  	      
+              MOON_COUNT = 0;
+	      levelColor = 0;
+	      
+	      let soundProps = new cjs.PlayPropsConfig().set({loop: -1})
+	      soundInstance = cjs.Sound.play("sound", soundProps);
+
+	      STAGE.removeAllChildren();
+	      
+	      // currentMoon
+              ARR.push(makeMoon());
+              ARR[0].visible = true;
+              ARR[0].mask = null;
+              ARR[0].shade.alpha = 0;
+	      ARR[0].scale = ARR[0].moonScale;	      
+              STAGE.addChild(ARR[0]);
+
+              // nextMoon
+              ARR.push(makeMoon());
+              STAGE.addChild(ARR[1]);
+
+              STAGE.addChild(DASH);
+	      
+	      PAUSED = false;	      
+	  }
+	  
+	  
+	  //--------------------------------------------------------------------------------- init
+	  function init(){
+              
+              STAGE = new cjs.Stage("canvas1");
+              cjs.Ticker.addEventListener('tick', STAGE);
+              STAGE.x = STAGE.y = 0.5;
+
+	      initKeys();
+
+	      DEAD_CENTER = {
+		  x:(STAGE.canvas.width/2),
+		  y:(STAGE.canvas.height/2)
+              };
+
+              DASH = buildDashboard(DEAD_CENTER, viewPortSize);
+
+	      startScreen = new cjs.Shape();
+	      startScreen.graphics.f("#111").dr(-10,-10, STAGE.canvas.width + 10, STAGE.canvas.width+10);
+
+
+              //--------------------------------------------------------------------------------- tick
+              cjs.Ticker.addEventListener('tick', function(){
+
+		  if(PAUSED){ return; }
+		  
+		  let currentMoon = ARR[INDEX];
+		  let nextMoon = ARR[INDEX + 1];
+		  
+		  if(KEYS.arrowdown) { currentMoon.y-= 2 + (currentMoon.moonScale / 2)};
+		  if(KEYS.arrowup)   { currentMoon.y+= 2 + (currentMoon.moonScale / 2)};
+		  if(KEYS.arrowleft) { currentMoon.x+= 2 + (currentMoon.moonScale / 2)};
+		  if(KEYS.arrowright){ currentMoon.x-= 2 + (currentMoon.moonScale / 2)};
+		  
+		  let scaleAmt = ((currentMoon.moonScale / 2) / SCALE_DIVISOR)
+
+		  nextMoon.visible = true;
+		  
+		  if(currentMoon.moonScale > 1){
+                      nextMoon.shade.alpha -= 0.001;
+                      currentMoon.shade.alpha += 0.002;
+		  };
+
+		  if(nextMoon.rotationDir == 1){
+                      nextMoon.rotation += nextMoon.rotationAmt;
+		  }else{
+                      nextMoon.rotation -= nextMoon.rotationAmt;
+		  };
+		  
+		  if(currentMoon.moonScale > 2.5){
+                      nextMoon.moonScale += 0.001;
+		  };
+		  
+		  if(currentMoon.moonScale < 3){
+                      currentMoon.moonScale += scaleAmt;
+                      nextMoon.maskScale += scaleAmt;
+		  };
+
+		  if(currentMoon.rotationDir == 1){
+                      currentMoon.rotation += currentMoon.rotationAmt;
+		  }else{
+                      currentMoon.rotation -= currentMoon.rotationAmt;
+		  };
+		  
+		  let transPt = currentMoon.localToGlobal(currentMoon.trackdot.x, currentMoon.trackdot.y);
+		  nextMoon.mask.x = transPt.x;
+		  nextMoon.mask.y = transPt.y;
+
+		  currentMoon.scale = currentMoon.moonScale;
+		  nextMoon.scale = nextMoon.moonScale;            
+		  nextMoon.mask.scale = nextMoon.maskScale;
+		  
+		  if(currentMoon.moonScale > 3) {
+                      nextLevel(currentMoon, nextMoon, transPt);
+		  };       
+
+              });
+	  }
+
+	  
+	  //--------------------------------------------------------------------------------- helpers
+	  function random(min, max) {
+              return Math.floor(Math.random() * (max - min + 1) + min);
+	  }
+	  
+	  function getDistance(pt1, pt2){
+              var distance = Math.sqrt(Math.pow((pt2.x - pt1.x),2) + Math.pow((pt2.y - pt1.y),2));
+              return distance;
+	  }
+	  
+	  function concentric(center1, radius1, center2, radius2){
+              var d = getDistance(center1, center2);
+              return ((d + radius1) < radius2);
+	  }
+	  
+	  function radToDegree(r){
+	      return r * 180/Math.PI;
+	  }
+
+	  function use360circle(d){
+	      if(d < 0){
+		  d = -d;
+	      }else{
+		  d = (180 - d) + 180;
+	      };
+	      return d;
+	  };
+	  
+
+	  
+	  //--------------------------------------------------------------------------------- load
+	  var queue = new createjs.LoadQueue(true);
+	  queue.installPlugin(cjs.Sound);      
+	  queue.on("complete", function(){
+	      init();
+	      document.getElementById("launch").style.visibility = "visible";
+	      document.getElementById("launch").focus();
+	      document.getElementById("launch").addEventListener("click", start)
+	  });    
+	  queue.on("error", function(e){ console.log(e); });    
+
+	  queue.loadManifest([
+              {id:"moonJPG", src:"moonOpt.jpg"},
+              {id:"shadow", src:"shadow5.png"},
+              {id:"sight", src:"sight.png"},
+              {id:"sound", src:"DescenteInfinie.ogg"},
+              {id:"moai", src:"moai.png"},
+              {id:"ufo", src:"ufo.png"}       	     	      
+	  ]);
+	  
+      })();
+
+      let orientation = (window.innerWidth < window.innerHeight) ? "v" : "h";
+      
+      window.addEventListener("resize", () => {
+	 orientation = (window.innerWidth < window.innerHeight) ? "v" : "h";
+      })
+
+    </script>
+
+    <style>
+      body {
+	  padding:0;
+	  marign:0;
+          font-family: 'ubuntu', sans-serif;
+          font-size:16px;
+          color:#fefefe;
+          text-align:center;
+          background-color:#111;
+      }
+
+      #canvas1 {
+	  display:block;
+	  margin:0px auto;
+	  background-color:#111;
+	  width:100%;
+	  margin-top:20px;
+	  cursor:none;
+      }
+      
+      #canvasContainer {
+	  display:none;
+      }
+
+      #gameContainer {
+	  display:none;
+	  width:100%;
+	  border:1px solid green;
+	  align-items:center;
+      }      
+
+      #canvasWrap {
+	  background-color:orange;
+	  flex:1 1;
+      }
+
+      .touchControlsH {
+	  width:150px;
+	  font-size:0px;
+	  text-align:left;
+	  background-color:red;
+	  flex:0 0 150px;	  
+      }
+
+      .touchControlsV {
+	  width:150px;
+	  font-size:0px;
+	  text-align:left;
+	  background-color:red;
+	  flex:0 0 150px;	  
+      }
+
+      .touchControlsNone {
+	  display:none;
+      }            
+      
+      #launch{
+	  background-color:rgba(255,255,255,0.2);
+	  cursor:pointer;
+	  visibility:hidden;
+      }
+      #launch:hover, #launch:active {
+	  background-color:rgba(255,255,255,0.5);
+      }
+      
+      #splash {
+	  background: url("moon.png") no-repeat fixed calc(100% + 100px) -100px;
+      }
+
+      h1 {
+	  text-shadow: 2px 2px #000;
+      }
+
+      .fadein {
+          animation: fadein 2s;
+      }
+      @keyframes fadein {
+	  from { opacity: 0; }
+	  to  { opacity: 1; }
+      }
+
+      .touchSpace {
+	  width:50px;
+	  height:50px;
+	  border-radius:50%;
+	  background-color:#fff;
+	  display:inline-block;
+      }
+      
+    </style>
+
+  </head>
+  <body>
+
+    <div id="gameContainer">
+      <div id="canvasWrap">
+	<canvas id="canvas1" width="1100" height="500" style="display:block; width:100%;"></canvas>      
+      </div>
+      <div id="touchControls" class="touchControlsH">
+	<div class="touchSpace" style="margin-left:50px;"></div><br />
+	<div class="touchSpace"></div><div class="touchSpace" style="margin-left:50px;"></div><br />	  
+	<div class="touchSpace" style="margin-left:50px;"></div>	  
+      </div>            
+    </div>
+    
+      <div id="depth" class="tc pa2" style="width:80px; color:#444; display:none;">0:0</div>
+    <!--
+    <div id="canvasContainer">
+      <canvas id="canvas1" width="1100" height="500"></canvas>
+      <div id="depth" class="tc pa2" style="width:80px; color:#444;">0:0</div>
+    </div>
+-->
+    <div id="splash" class="ph5-ns pt3 pa3 tl">
+
+      <h1 class="f2 lh-title">for the moon is hollow<br />and i have touched the sky</h1>
+
+      <div class="f5 lh-copy mb4">
+	there's a fissure in the rock<br />
+	another sphere within<br />
+	and another<br />
+	infinite concentric systems<br />
+	defying our cosmology<br />
+      </div>
+
+      <div class="tc">
+	<button id="launch" class="f4 br2 ba bw1 ph3 pv2 mb4 dib b--near-white near-white">Begin &nbsp;Launch &nbsp;Sequence</button><br />
+      </div>
+      
+      <div class="w-100" style="max-width:400px;">
+
+	<div class="f5 tl mb2">
+	  Arrow Keys = move<br />
+	  WASD Keys = move<br />
+	  Spacebar = pause<br />
+	</div>
+
+	<img src="keyboard.png" class="w-100" /><br />
+
+	<div style="position:absolute; bottom:10px; right:10px; color:#444;">&copy; 2020 jason bonthron</div>
+	
+      </div>
+    </div>
+
+  </body>
+</html>
+
