@@ -218,7 +218,7 @@
 	      shade.alpha = 0.2;
 	      c.shade = shade;
 
-	      inner.cache(-3000,-3000,6000,6000);             
+
 	      c.addChild(inner);
 	      c.addChild(shade);
 	      
@@ -298,10 +298,10 @@
 	      STAGE.removeAllChildren();	      
 	      STAGE.addChild(startScreen);
 	      startScreen.alpha = 1;
-
+	      DEPTH = 0;
+	      
 	      cjs.Tween.get({}).wait(1000).call(() => {
 		  document.getElementById("gameContainer").style.display = "none";		  
-//		  document.getElementById("canvasContainer").style.display = "none";	      		  
 		  document.getElementById("splash").style.display = "block";		  
 		  document.getElementById("splash").classList.add("fadein");
 		  document.getElementById("depth").innerHTML = 0 + ":" + 0;
@@ -309,24 +309,21 @@
 	      })
 	  }
 
-	  
+
 	  //--------------------------------------------------------------------------------- start
 	  function start(){
 
-	      let m = makeMoon();
-              m.visible = true;
-              m.mask = null;
-              m.shade.alpha = 0;
-	      m.scale = m.moonScale;	      
+	      let grey = new cjs.Shape();
+	      grey.graphics.f("#ccc").dr(-10,-10, STAGE.canvas.width + 10, STAGE.canvas.width+10);
+	      STAGE.addChild(grey);
 
-	      STAGE.addChild(m);
 	      STAGE.addChild(startScreen);
 	      
 	      document.getElementById("splash").style.display = "none";
-	      //document.getElementById("canvasContainer").style.display = "block";	      
 	      document.getElementById("gameContainer").style.display = "block";		  
 
 	      cjs.Tween.get(startScreen).to({alpha:0}, 2000, cjs.Ease.circIn).call(() => {
+		  STAGE.removeChild(grey);
 		  STAGE.removeChild(startScreen);
 		  newGame();
 	      });
@@ -354,7 +351,6 @@
               ARR[0].visible = true;
               ARR[0].mask = null;
               ARR[0].shade.alpha = 0;
-	      ARR[0].scale = ARR[0].moonScale;	      
               STAGE.addChild(ARR[0]);
 
               // nextMoon
@@ -391,8 +387,9 @@
               cjs.Ticker.addEventListener('tick', function(){
 
 		  if(PAUSED){ return; }
-		  
+
 		  let currentMoon = ARR[INDEX];
+
 		  let nextMoon = ARR[INDEX + 1];
 		  
 		  if(KEYS.arrowdown) { currentMoon.y-= 2 + (currentMoon.moonScale / 2)};
@@ -507,7 +504,6 @@
       let orientation = (window.innerWidth < window.innerHeight) ? "v" : "h";
 
       window.addEventListener("resize", () => {
-
 	  orientation = (window.innerWidth < window.innerHeight) ? "v" : "h";
 
 	  if(DEVICE == "mobile"){
