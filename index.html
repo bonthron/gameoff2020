@@ -81,8 +81,37 @@
 
 		  if(KEYS.hasOwnProperty(k)){ KEYS[k] = false; };
               };
+
+
+		  
+	      document.getElementById("touchUp").addEventListener("touchstart", () => {
+		  KEYS["arrowup"] = true;
+	      });
+	      document.getElementById("touchUp").addEventListener("touchend", () => {
+		  KEYS["arrowup"] = false;
+	      });
+	      document.getElementById("touchDown").addEventListener("touchstart", () => {
+		  KEYS["arrowdown"] = true;
+	      });
+	      document.getElementById("touchDown").addEventListener("touchend", () => {
+		  KEYS["arrowdown"] = false;
+	      });
+	      document.getElementById("touchLeft").addEventListener("touchstart", () => {
+		  KEYS["arrowleft"] = true;
+	      });
+	      document.getElementById("touchLeft").addEventListener("touchend", () => {
+		  KEYS["arrowleft"] = false;
+	      });
+	      document.getElementById("touchRight").addEventListener("touchstart", () => {
+		  KEYS["arrowright"] = true;
+	      });
+	      document.getElementById("touchRight").addEventListener("touchend", () => {
+		  KEYS["arrowright"] = false;
+	      });	      	      
+
 	  }
 
+	  function touchMove(e) { e.preventDefault(); }
 	  
 	  //------------------------------------------------------------------------------- togglePause
 	  function togglePause(){
@@ -307,6 +336,8 @@
 		  document.getElementById("depth").innerHTML = 0 + ":" + 0;
 		  document.getElementById("launch").focus();		  
 	      })
+
+	      document.removeEventListener('touchmove', touchMove, { passive: false });	      
 	  }
 
 
@@ -327,6 +358,8 @@
 		  STAGE.removeChild(startScreen);
 		  newGame();
 	      });
+
+	      document.addEventListener('touchmove', touchMove, { passive: false });	      
 	  }
 
 
@@ -561,6 +594,8 @@
           color:#fefefe;
           text-align:center;
           background-color:#111;
+	  -webkit-user-select: none;
+	  user-select: none;	  	  
       }
 
       #canvas1 {
@@ -603,6 +638,10 @@
 
       label {display:inline-block; cursor:pointer; }
 
+      #touchControls {
+	  -webkit-user-select: none;
+	  user-select: none;	  
+      }
 
       .touchSpace {
 	  width:50px;
@@ -610,6 +649,8 @@
 	  border-radius:50%;
 	  background-color:#fff;
 	  display:inline-block;
+	  -webkit-user-select: none;
+	  user-select: none;	  
       }
 
       .touchNone #touchControls {
@@ -620,10 +661,11 @@
       }
 
       .touchHorizontal #touchControls {
-	  width:150px;
+	  width:190px;
 	  font-size:0px;
 	  text-align:left;
-	  flex:0 0 150px;	  
+	  flex:0 0 190px;
+	  margin:10px;
       }
 
       .touchHorizontal #canvasWrap {
@@ -636,7 +678,9 @@
 	  text-align:left;
 	  flex:1 0;
 	  margin-left:auto;
-	  margin-right:auto;	  
+	  margin-right:auto;
+	  margin-top:10px;
+	  margin-bottom:10px;	  	  
       }
 
       .touchVertical #canvasWrap {
@@ -674,9 +718,10 @@
 	</div>
 
 	<div id="touchControls">
-	  <div class="touchSpace" style="margin-left:50px;"></div><br />
-	  <div class="touchSpace"></div><div class="touchSpace" style="margin-left:50px;"></div><br />	  
-	  <div class="touchSpace" style="margin-left:50px;"></div>	  
+	  <div id="touchUp" class="touchSpace" style="margin-left:50px;"></div><br />
+	  <div id="touchLeft" class="touchSpace"></div>
+	  <div id="touchRight" class="touchSpace" style="margin-left:50px;"></div><br />	  
+	  <div id="touchDown" class="touchSpace" style="margin-left:50px;"></div>	  
 	</div>
 	
       </div>            
