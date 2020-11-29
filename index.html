@@ -89,26 +89,53 @@
 	      });
 	      document.getElementById("touchUp").addEventListener("touchend", () => {
 		  KEYS["arrowup"] = false;
+	      });	      
+	      document.getElementById("touchUp").addEventListener("touchmove", () => {
+		  KEYS["arrowup"] = true;
+	      });	      
+	      document.getElementById("touchUp").addEventListener("touchcancel", () => {
+		  KEYS["arrowup"] = false;
 	      });
+	      
 	      document.getElementById("touchDown").addEventListener("touchstart", () => {
 		  KEYS["arrowdown"] = true;
 	      });
 	      document.getElementById("touchDown").addEventListener("touchend", () => {
 		  KEYS["arrowdown"] = false;
 	      });
+	      document.getElementById("touchDown").addEventListener("touchmove", () => {
+		  KEYS["arrowdown"] = true;
+	      });	      
+	      document.getElementById("touchDown").addEventListener("touchcancel", () => {
+		  KEYS["arrowdown"] = false;
+	      });
+
 	      document.getElementById("touchLeft").addEventListener("touchstart", () => {
 		  KEYS["arrowleft"] = true;
 	      });
 	      document.getElementById("touchLeft").addEventListener("touchend", () => {
 		  KEYS["arrowleft"] = false;
 	      });
+	      document.getElementById("touchLeft").addEventListener("touchmove", () => {
+		  KEYS["arrowleft"] = true;
+	      });	      
+	      document.getElementById("touchLeft").addEventListener("touchcancel", () => {
+		  KEYS["arrowleft"] = false;
+	      });	      
+	      
 	      document.getElementById("touchRight").addEventListener("touchstart", () => {
 		  KEYS["arrowright"] = true;
 	      });
 	      document.getElementById("touchRight").addEventListener("touchend", () => {
 		  KEYS["arrowright"] = false;
 	      });	      	      
-
+	      document.getElementById("touchRight").addEventListener("touchmove", () => {
+		  KEYS["arrowright"] = true;
+	      });	      
+	      document.getElementById("touchRight").addEventListener("touchcancel", () => {
+		  KEYS["arrowright"] = false;
+	      });
+	      
 	  }
 
 	  function touchMove(e) { e.preventDefault(); }
@@ -709,7 +736,7 @@
     <!-- ======================================================  GAME CONTAINER  -->
     <div id="gameContainer">
 
-      <div id="depth" class="tc pa2" style="width:80px; color:#444;">0:0</div>      
+      <div id="depth" class="tc pa2" style="width:80px; color:#ccc;">0:0</div>      
 
       <div id="flexControl" class="touchNone">
 
