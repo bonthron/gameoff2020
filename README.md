@@ -11,13 +11,14 @@ It was designed for the "Game Off" annual game jam, where participants have 1 mo
 *For the Moon is Hollow* is built with JavaScript, CSS, and uses the HTML Canvas element. It uses CreateJS for canvas rendering and composition. The sound is a Shepard tone, a sound consisting of a superposition of sine waves separated by octaves, which, creates an auditory illusion of a tone that seems to continually descend in pitch.
 
 It has been tested in Firefox,Chrome,Edge on Windows; Firefox,Chromium on Linux; Safari on iOS.
+
 Itch.io: [https://bonthron.itch.io/moon](https://bonthron.itch.io/moon)
 
 
 there's a fissure in the rock \
 another sphere within \
 infinite concentric systems \
-defying our cosmology \
+defying our cosmology 
 
 
 
